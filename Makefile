@@ -9,3 +9,7 @@ clean:
 		rm -f 9cc *.o *~ tmp*
 
 .PHONY: test clean
+
+run:
+		docker-compose run  --rm main ash 
+		

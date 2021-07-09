@@ -167,11 +167,11 @@ Node *new_num(int val) {
 Node *expr();
 Node *mul();
 Node *primary();
+Node *unary();
 
 // expr = mul ("+" mul | "-" mul)*
 Node *expr() {
   Node *node = mul();
-
   for (;;) {
     if (consume('+'))
       node = new_binary(ND_ADD, node, mul());
@@ -182,19 +182,29 @@ Node *expr() {
   }
 }
 
-// mul = primary ("*" primary | "/" primary)*
-Node *mul() {
-  Node *node = primary();
+// mul = unary ("*" unary | "/" unary)*
+ Node *mul() {
+   Node *node = unary();
 
-  for (;;) {
-    if (consume('*'))
-      node = new_binary(ND_MUL, node, primary());
-    else if (consume('/'))
-      node = new_binary(ND_DIV, node, primary());
-    else
-      return node;
-  }
-}
+   for (;;) {
+     if (consume('*'))
+       node = new_binary(ND_MUL, node, unary());
+     else if (consume('/'))
+       node = new_binary(ND_DIV, node, unary());
+     else
+       return node;
+   }
+ }
+
+ // unary = ("+" | "-")? unary
+ //       | primary
+ Node *unary() {
+   if (consume('+'))
+     return unary();
+   if (consume('-'))
+     return new_binary(ND_SUB, new_num(0), unary());
+   return primary();
+ }
 
 // primary = "(" expr ")" | num
 Node *primary() {
@@ -263,6 +273,7 @@ int main(int argc, char **argv) {
   // to RAX to make it a program exit code.
   printf("  pop rax\n");
   printf("  ret\n");
+  
   return 0;
 }
 
