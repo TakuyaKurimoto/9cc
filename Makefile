@@ -1,12 +1,17 @@
 CFLAGS=-std=c11 -g -static
+SRCS=$(wildcard *.c)
+OBJS=$(SRCS:.c=.o) #https://orumin.blogspot.com/2019/12/makefile.html
 
-9cc: 9cc.c
+takuya: $(OBJS)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS)
 
-test: 9cc
+$(OBJS): takuya.h
+
+test: takuya
 		./test.sh
 
 clean:
-		rm -f 9cc *.o *~ tmp*
+		rm -f chibicc *.o *~ tmp*
 
 .PHONY: test clean
 
