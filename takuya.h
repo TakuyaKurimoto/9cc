@@ -30,6 +30,7 @@ int expect_number();
 bool at_eof();
 Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 Token *tokenize();
+Token *consume_ident();
 extern char *user_input;
 extern Token *token;
 //
@@ -44,7 +45,9 @@ typedef enum {
   ND_NE,  // !=
   ND_LT,  // <
   ND_LE,  // <=
+  ND_ASSIGN, // =
   ND_NUM, // Integer
+  ND_LVAR, // Local variable
   ND_RETURN, // "return"
 } NodeKind;
 // AST node type
@@ -54,6 +57,7 @@ struct Node {
   Node *next; // Next node
   Node *lhs;     // Left-hand side
   Node *rhs;     // Right-hand side
+  char name; // Used if kind == ND_LVAR
   int val;       // Used if kind == ND_NUM
 };
 Node *program();

@@ -34,6 +34,13 @@ bool consume(char *op) {
   token = token->next;
   return true;
 }
+Token *consume_ident() {
+   if (token->kind != TK_IDENT)
+     return NULL;
+   Token *t = token;//Token t = *tokenとかくと、local変数に新しいToken型をコピーしたことになってしまうから駄目
+   token = token->next;
+   return t;
+}
 
 // Ensure that the current token is `op`.
 void expect(char *op) {
@@ -105,7 +112,7 @@ Token *tokenize() {
     }
 
     // Single-letter punctuator
-    if (strchr("+-*/()<>;", *p)) {
+    if (strchr("+-*/()<>;=", *p)) {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
     }
