@@ -3,7 +3,7 @@ SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.o) #https://orumin.blogspot.com/2019/12/makefile.html
 
 takuya: $(OBJS)
-	$(CC) -o $@ $(OBJS) $(LDFLAGS)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS) -g
 
 $(OBJS): takuya.h
 
@@ -17,4 +17,6 @@ clean:
 
 run:
 		docker-compose run  --rm main ash 
+debug:
+		gdb ./takuya core
 		

@@ -1,5 +1,7 @@
 #include "takuya.h"
 
+Var *locals=NULL;
+
 Node *new_node(NodeKind kind) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = kind;
@@ -24,11 +26,23 @@ Node *new_num(int val) {
   return node;
 }
 
-Node *new_lvar(char *name) {
-   Node *node = new_node(ND_LVAR);
-   node->name = *name;
-   return node;
+Node *new_var(Var *var) {
+  Node *node = new_node(ND_VAR);
+  node->var = var;
+  return node;
 }
+
+Var *find_or_new_var(Token *t){
+  for (Var *var = locals; var; var = var->next)
+     if (strlen(var->name) == t->len && !memcmp(t->str, var->name, t->len))
+       return var;
+  Var *v = calloc(1, sizeof(Var));
+  v->next = locals;
+  v->name = strndup(t->str,t->len);
+  locals= v;
+  return locals;
+}
+
 
 Node *stmt();
 Node *expr();
@@ -41,7 +55,9 @@ Node *unary();
 Node *primary();
 
 // program = stmt*
-Node *program() {
+Program *program() {
+  Program *p =calloc(1, sizeof(Program));
+
   Node head;//https://teratail.com/questions/349077
   Node *node = stmt();
   head.next = node;
@@ -49,7 +65,9 @@ Node *program() {
     node->next = stmt();
     node=node->next;
   }
-  return head.next;
+  p->node=head.next;
+  p->locals=locals;
+  return p;
 }
 
 // stmt = "return" expr ";"
@@ -156,7 +174,8 @@ Node *primary() {
   }
   Token *t = consume_ident();
     if (t){//構造体はnullと比較できないからif (*t)はエラー　https://base64.work/so/c/1158512
-      return new_lvar(t->str);
+      Var *var = find_or_new_var(t);
+      return new_var(var);
     }
   return new_num(expect_number());
 }

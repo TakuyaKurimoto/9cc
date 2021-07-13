@@ -22,8 +22,16 @@ struct Token {
   char *str;      // Token string
   int len;        // Token lengthß
 };
+// Local variable
+typedef struct Var Var;
+struct Var {
+  Var *next;
+  char *name; // Variable name
+  int offset; // Offset from RBP
+};
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
+char *strndup(char *p, int len);
 bool consume(char *op);
 void expect(char *op);
 int expect_number();
@@ -47,7 +55,7 @@ typedef enum {
   ND_LE,  // <=
   ND_ASSIGN, // =
   ND_NUM, // Integer
-  ND_LVAR, // Local variable
+  ND_VAR, // variable
   ND_RETURN, // "return"
 } NodeKind;
 // AST node type
@@ -57,11 +65,16 @@ struct Node {
   Node *next; // Next node
   Node *lhs;     // Left-hand side
   Node *rhs;     // Right-hand side
-  char name; // Used if kind == ND_LVAR
+  Var *var; // Used if kind == ND_VAR
   int val;       // Used if kind == ND_NUM
 };
-Node *program();
+typedef struct {
+  Node *node;
+  Var *locals;
+  int stack_size;
+} Program;
+Program *program();
 //
 // codegen.c
 //
-void codegen(Node *node);
+void codegen(Program *prog);
