@@ -58,6 +58,7 @@ typedef enum {
   ND_VAR, // variable
   ND_RETURN, // "return"
   ND_IF, // "if"
+  ND_WHILE, // "while"
 } NodeKind;
 // AST node type
 typedef struct Node Node;
@@ -67,11 +68,11 @@ struct Node {
   Node *lhs;     // Left-hand side
   Node *rhs;     // Right-hand side
 
-  // "if" statement
+  // "if" or "while" statement
   Node *cond;
   Node *then;
   Node *els;
-  
+
   Var *var; // Used if kind == ND_VAR
   int val;       // Used if kind == ND_NUM
 };
