@@ -1,5 +1,7 @@
 #include "takuya.h"
 
+int labelseq = 0;
+
 // Pushes the given node's address to the stack.
 void gen_addr(Node *node) {
   if (node->kind == ND_VAR) {
@@ -43,6 +45,28 @@ void gen(Node *node) {
       printf("  pop rax\n");
       printf(" jmp .Lreturn\n");
      return;
+    case ND_IF: {
+     int seq = labelseq++;
+     if (node->els) {
+       gen(node->cond);
+       printf("  pop rax\n");
+       printf("  cmp rax, 0\n");//0の時はelse節に飛ぶ
+       printf("  je  .Lelse%d\n", seq);
+       gen(node->then);
+       printf("  jmp .Lend%d\n", seq);
+       printf(".Lelse%d:\n", seq);
+       gen(node->els);
+       printf(".Lend%d:\n", seq);
+     } else {
+       gen(node->cond);
+       printf("  pop rax\n");
+       printf("  cmp rax, 0\n");
+       printf("  je  .Lend%d\n", seq);
+       gen(node->then);
+       printf(".Lend%d:\n", seq);
+     }
+     return;
+   }
   }
 
   gen(node->lhs);
