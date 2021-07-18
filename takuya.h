@@ -60,6 +60,7 @@ typedef enum {
   ND_IF, // "if"
   ND_WHILE, // "while"
   ND_FOR, // "for"
+  ND_BLOCK, // { ... }
 } NodeKind;
 // AST node type
 typedef struct Node Node;
@@ -68,7 +69,8 @@ struct Node {
   Node *next; // Next node
   Node *lhs;     // Left-hand side
   Node *rhs;     // Right-hand side
-
+  // Block
+  Node *body;
   // "if, "while" or "for" statement
   Node *cond;
   Node *then;

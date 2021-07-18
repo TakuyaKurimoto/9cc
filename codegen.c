@@ -63,7 +63,7 @@ void gen(Node *node) {
        printf("  cmp rax, 0\n");
        printf("  je  .Lend%d\n", seq);
        gen(node->then);
-       printf(".Lend%d:\n", seq);
+       printf(".Lend%d:\n", seq);//Lから始まるラベルはアセンブラによって特別に認識される名前で、自動的にファイルスコープになります。.Lから始めるようにしておくと、他のファイルに含まれているラベルと衝突する心配がいらなくなります。
      }
      return;
    }
@@ -99,6 +99,12 @@ void gen(Node *node) {
       printf(".Lend%d:\n", seq);
       return;
      }
+    case ND_BLOCK: {
+      for (Node *n = node->body; n; n = n->next){
+       gen(n);
+      }
+      return;
+    }
   }
 
   gen(node->lhs);
