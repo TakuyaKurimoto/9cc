@@ -219,7 +219,8 @@ Node *unary() {
   return primary();
 }
 
-// primary = "(" expr ")" | ident | num
+// primary = "(" expr ")" | ident args? | num
+// args = "(" ")"
 Node *primary() {
   if (consume("(")) {
     Node *node = expr();
@@ -228,6 +229,12 @@ Node *primary() {
   }
   Token *t = consume_ident();
     if (t){//構造体はnullと比較できないからif (*t)はエラー　https://base64.work/so/c/1158512
+      if (consume("(")) {
+        expect(")");
+        Node *node = new_node(ND_FUNCALL);
+        node->funcname = strndup(t->str, t->len);
+        return node;
+      }
       Var *var = find_or_new_var(t);
       return new_var(var);
     }

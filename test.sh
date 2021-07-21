@@ -1,10 +1,13 @@
 #!/bin/bash
+
+
+
 assert() {
   expected="$1"
   input="$2"
 
   ./takuya "$input" > tmp.s
-  cc -o tmp tmp.s
+  gcc -static -o tmp tmp.s tmp2.o
   ./tmp
   actual="$?"
 
@@ -16,7 +19,7 @@ assert() {
   fi
 }
 
-ssert 0 'return 0;'
+assert 0 'return 0;'
 assert 42 'return 42;'
 assert 21 'return 5+20-4;'
 assert 41 'return  12 + 34 - 5 ;'
@@ -58,4 +61,6 @@ assert 55 'i=0; j=0; for (i=0; i<=10; i=i+1) j=i+j; return j;'
 assert 3 'for (;;) return 3; return 5;'
 assert 3 '{1; {2;} return 3;}'
 assert 55 'i=0; j=0; while(i<=10) {j=i+j; i=i+1;} return j;'
+assert 3 'return ret3();'
+assert 5 'return ret5();'
 echo OK

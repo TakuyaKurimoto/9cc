@@ -61,6 +61,7 @@ typedef enum {
   ND_WHILE, // "while"
   ND_FOR, // "for"
   ND_BLOCK, // { ... }
+  ND_FUNCALL, // Function call
 } NodeKind;
 // AST node type
 typedef struct Node Node;
@@ -78,7 +79,8 @@ struct Node {
   Node *init;
   Node *inc;
   Var *var; // Used if kind == ND_VAR
-  int val;       // Used if kind == ND_NUM
+  int val;       // Used if kind == ND_NUM  
+  char *funcname;// Function call
 };
 typedef struct {
   Node *node;
@@ -86,6 +88,7 @@ typedef struct {
   int stack_size;
 } Program;
 Program *program();
+
 //
 // codegen.c
 //

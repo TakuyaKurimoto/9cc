@@ -105,6 +105,10 @@ void gen(Node *node) {
       }
       return;
     }
+    case ND_FUNCALL:
+    printf("  call %s\n", node->funcname);
+    printf("  push rax\n");//関数の戻り値はraxに渡される。この後returnでpop raxするからここでpushしておく
+    return;
   }
 
   gen(node->lhs);
