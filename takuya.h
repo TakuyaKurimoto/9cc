@@ -80,7 +80,9 @@ struct Node {
   Node *inc;
   Var *var; // Used if kind == ND_VAR
   int val;       // Used if kind == ND_NUM  
-  char *funcname;// Function call
+  // Function call
+  char *funcname;
+  Node *args;
 };
 typedef struct {
   Node *node;

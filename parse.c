@@ -219,7 +219,20 @@ Node *unary() {
   return primary();
 }
 
-// primary = "(" expr ")" | ident args? | num
+// func-args = "(" (assign ("," assign)*)? ")"
+Node *func_args() {
+  if (consume(")"))
+    return NULL;
+  Node *head = assign();
+  Node *cur = head;
+  while (consume(",")) {
+    cur->next = assign();
+    cur = cur->next;
+  }
+  expect(")");
+  return head;
+}
+// primary = "(" expr ")" | ident func-args? | num
 // args = "(" ")"
 Node *primary() {
   if (consume("(")) {
@@ -230,9 +243,10 @@ Node *primary() {
   Token *t = consume_ident();
     if (t){//構造体はnullと比較できないからif (*t)はエラー　https://base64.work/so/c/1158512
       if (consume("(")) {
-        expect(")");
+        
         Node *node = new_node(ND_FUNCALL);
         node->funcname = strndup(t->str, t->len);
+        node->args = func_args();
         return node;
       }
       Var *var = find_or_new_var(t);

@@ -105,10 +105,21 @@ void gen(Node *node) {
       }
       return;
     }
-    case ND_FUNCALL:
+    case ND_FUNCALL:{
+     
+     int nargs = 0;
+     for (Node *arg = node->args; arg; arg = arg->next) {
+       gen(arg);
+       nargs++;
+     }
+     char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+     for (nargs; nargs > 0; nargs--){
+       printf("  pop %s\n", argreg[nargs-1]);
+      }
     printf("  call %s\n", node->funcname);
     printf("  push rax\n");//関数の戻り値はraxに渡される。この後returnでpop raxするからここでpushしておく
     return;
+    }
   }
 
   gen(node->lhs);
