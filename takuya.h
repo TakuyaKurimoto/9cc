@@ -35,6 +35,7 @@ char *strndup(char *p, int len);
 bool consume(char *op);
 void expect(char *op);
 int expect_number();
+char *expect_ident();
 bool at_eof();
 Token *new_token(TokenKind kind, Token *cur, char *str, int len);
 Token *tokenize();
@@ -84,14 +85,17 @@ struct Node {
   char *funcname;
   Node *args;
 };
-typedef struct {
+typedef struct Function Function;
+struct Function {
+  Function *next;//自分の定義の中で自分を呼び出す場合はあらかじめtypedefで宣言しとく
+  char *name;
   Node *node;
   Var *locals;
   int stack_size;
-} Program;
-Program *program();
+};
+Function *program();
 
 //
 // codegen.c
 //
-void codegen(Program *prog);
+void codegen(Function *prog);

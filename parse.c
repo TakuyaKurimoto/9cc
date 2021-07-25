@@ -1,6 +1,6 @@
 #include "takuya.h"
 
-Var *locals=NULL;
+Var *locals;
 
 Node *new_node(NodeKind kind) {
   Node *node = calloc(1, sizeof(Node));
@@ -43,7 +43,7 @@ Var *find_or_new_var(Token *t){
   return locals;
 }
 
-
+Function *function();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -54,20 +54,37 @@ Node *mul();
 Node *unary();
 Node *primary();
 
-// program = stmt*
-Program *program() {
-  Program *p =calloc(1, sizeof(Program));
+// program = function*
+Function *program() {
+   Function head;
+   head.next = NULL;
+   Function *cur=&head;
+    while (! at_eof()){
+    cur->next = function();
+    cur = cur->next;
+  }
+  return head.next;
+} 
+// function = ident "(" ")" "{" stmt* "}"
+Function *function() {
+  locals = NULL;//ローカルズを毎回リセットする。
+  char *name = expect_ident();
+  expect("(");
+  expect(")");
+  expect("{");
 
   Node head;//https://teratail.com/questions/349077
   Node *node = stmt();
   head.next = node;
-  while (! at_eof()){
+  while (!consume("}")){
     node->next = stmt();
     node=node->next;
   }
-  p->node=head.next;
-  p->locals=locals;
-  return p;
+  Function *fn = calloc(1, sizeof(Function));
+  fn->name = name;
+  fn->node = head.next;
+  fn->locals = locals;
+  return fn;
 }
 
 // stmt = "return" expr ";"
