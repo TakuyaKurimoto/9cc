@@ -2,6 +2,7 @@
 
 int labelseq = 0;
 char *funcname;
+char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
 // Pushes the given node's address to the stack.
 void gen_addr(Node *node) {
@@ -113,7 +114,7 @@ void gen(Node *node) {
        gen(arg);
        nargs++;
      }
-     char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+     
      for (nargs; nargs > 0; nargs--){
        printf("  pop %s\n", argreg[nargs-1]);
       }
@@ -192,11 +193,16 @@ void codegen(Function *prog) {
     funcname = fn->name;
 
     // プロローグ
-    // 変数26個分の領域を確保する
+    // ローカル変数2分の領域を確保する
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
     printf(" sub rsp, %d\n", fn->stack_size);
-
+    // レジスタに入っている引数の値を、ローカル変数の値とみなして、値を保存する
+    int i = 0;
+    for (VarList *vl = fn->params; vl; vl = vl->next) {
+      Var *var = vl->var;
+      printf("  mov [rbp-%d], %s\n", var->offset, argreg[i++]);
+    }
     for (Node *n=fn->node;n;n=n->next){
         gen(n);
 
