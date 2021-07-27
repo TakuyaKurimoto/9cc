@@ -55,6 +55,8 @@ typedef enum {
   ND_LT,  // <
   ND_LE,  // <=
   ND_ASSIGN, // =
+  ND_ADDR,      // unary &
+  ND_DEREF,     // unary *
   ND_NUM, // Integer
   ND_VAR, // variable
   ND_RETURN, // "return"

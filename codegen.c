@@ -3,13 +3,18 @@
 int labelseq = 0;
 char *funcname;
 char *argreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+void gen(Node *node);
 
 // Pushes the given node's address to the stack.
 void gen_addr(Node *node) {
-  if (node->kind == ND_VAR) {
-    printf(" lea rax, [rbp-%d]\n", node->var->offset);//raxにrbp-offsetが指すアドレスそのものを転送　https://ja.wikibooks.org/wiki/X86アセンブラ/データ転送命令
-    printf("  push rax\n");
-    return;
+  switch (node->kind) {
+    case ND_VAR:
+      printf(" lea rax, [rbp-%d]\n", node->var->offset);//raxにrbp-offsetが指すアドレスそのものを転送　https://ja.wikibooks.org/wiki/X86アセンブラ/データ転送命令
+      printf("  push rax\n");
+      return;
+    case ND_DEREF:
+      gen(node->lhs);
+      return;
   }
 
   error("not an lvalue");
@@ -42,6 +47,13 @@ void gen(Node *node) {
      gen(node->rhs);
      store();
      return;
+    case ND_ADDR:
+      gen_addr(node->lhs);
+      return;
+    case ND_DEREF:
+      gen(node->lhs);
+      load();
+      return;
     case ND_RETURN:
       gen(node->lhs);
       printf("  pop rax\n");
