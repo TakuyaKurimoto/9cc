@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+typedef struct Type Type;
 //
 // tokenize.c
 //
@@ -86,6 +88,7 @@ struct Node {
   // Function call
   char *funcname;
   Node *args;
+  Type *ty; // Type, e.g. int or pointer to int
 };
 typedef struct VarList VarList;
 struct VarList {
@@ -104,7 +107,15 @@ struct Function {
 };
 Function *program();
 
-
+//
+// typing.c
+//
+typedef enum { TY_INT, TY_PTR } TypeKind;
+struct Type {
+  TypeKind kind;
+  Type *base;
+};
+void add_type(Function *prog);
 
 //
 // codegen.c
