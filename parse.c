@@ -341,7 +341,7 @@ Node *func_args() {
   expect(")");
   return head;
 }
-// primary = "(" expr ")" | ident func-args? | num
+// primary = "(" expr ")" | "sizeof" unary | ident func-args? | num
 // args = "(" ")"
 Node *primary() {
   if (consume("(")) {
@@ -349,6 +349,8 @@ Node *primary() {
     expect(")");
     return node;
   }
+  if (consume("sizeof"))
+    return new_unary(ND_SIZEOF, unary());
   Token *t = consume_ident();
     if (t){//構造体はnullと比較できないからif (*t)はエラー　https://base64.work/so/c/1158512
       if (consume("(")) {

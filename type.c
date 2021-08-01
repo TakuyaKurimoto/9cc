@@ -91,7 +91,14 @@ void visit(Node *node) {
       error_at("", "invalid pointer dereference");
     node->ty = node->lhs->ty->base;
     return;
+  case ND_SIZEOF://sizeofは関数ではなく実際は単項演算子
+    node->kind = ND_NUM;
+    node->ty = int_type();
+    node->val = size_of(node->lhs->ty);
+    node->lhs = NULL;
+    return;
   }
+  
 }
 
 void add_type(Function *prog) {

@@ -65,6 +65,7 @@ typedef enum {
   ND_NUM, // Integer
   ND_VAR, // variable
   ND_NULL, // Empty statement
+  ND_SIZEOF, // "sizeof"
   ND_RETURN, // "return"
   ND_IF, // "if"
   ND_WHILE, // "while"
