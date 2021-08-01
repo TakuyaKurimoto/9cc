@@ -1,6 +1,7 @@
 #include "takuya.h"
 
 VarList *locals;
+VarList *globals;
 
 Node *new_node(NodeKind kind) {
   Node *node = calloc(1, sizeof(Node));
@@ -39,23 +40,36 @@ Var *find_var(Token *tok) {
     if (strlen(var->name) == tok->len && !memcmp(tok->str, var->name, tok->len))
       return var;
   }
+  for (VarList *vl = globals; vl; vl = vl->next) {
+    Var *var = vl->var;
+    if (strlen(var->name) == tok->len && !memcmp(tok->str, var->name, tok->len))
+      return var;
+  }
   return NULL;
 }
 
-Var *push_var(char *name, Type *ty) {
+Var *push_var(char *name, Type *ty, bool is_local) {
   Var *var = calloc(1, sizeof(Var));
   var->name = name;
   var->ty = ty;
+  var->is_local = is_local;
   VarList *vl = calloc(1, sizeof(VarList));
   vl->var = var;
-  vl->next = locals;
-  locals = vl;
+  if (is_local) {
+    vl->next = locals;
+    locals = vl;
+  } else {
+    vl->next = globals;
+    globals = vl;
+  }
   return var;
 }
 
 
 
 Function *function();
+Type *basetype();
+void global_var();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -67,16 +81,32 @@ Node *unary();
 Node *postfix();
 Node *primary();
 
-// program = function*
-Function *program() {
-   Function head;
-   head.next = NULL;
-   Function *cur=&head;
-    while (! at_eof()){
-    cur->next = function();
-    cur = cur->next;
+bool is_function() {
+  Token *tok = token;
+  basetype();
+  bool isfunc = consume_ident() && consume("(");
+  token = tok;
+  return isfunc;
+}
+// program = (global-var | function)*
+Program *program() {
+  globals = NULL;
+  Function head;
+  head.next = NULL;
+  Function *cur=&head;
+  while (!at_eof()) {    
+    if (is_function()) {
+      cur->next = function();
+      cur = cur->next;
+    } else {
+      global_var();
+    }
   }
-  return head.next;
+  Program *prog = calloc(1, sizeof(Program));
+  prog->globals = globals;
+  prog->fns = head.next;
+  return prog;
+ 
 } 
 
 Type *basetype() {
@@ -101,7 +131,7 @@ VarList *read_func_param() {
   char *name = expect_ident();
   ty = read_type_suffix(ty);
   VarList *vl = calloc(1, sizeof(VarList));
-  vl->var = push_var(name, ty);
+  vl->var = push_var(name, ty, true);
   return vl;
 }
 
@@ -133,6 +163,7 @@ Function *function() {
   Node head;//https://teratail.com/questions/349077
   Node *node = stmt();
   head.next = node;
+  
   while (!consume("}")){
     node->next = stmt();
     node=node->next;
@@ -142,13 +173,22 @@ Function *function() {
   return fn;
 }
 
+// global-var = basetype ident ("[" num "]")* ";"
+void global_var() {
+  Type *ty = basetype();
+  char *name = expect_ident();
+  ty = read_type_suffix(ty);
+  expect(";");
+  push_var(name, ty, false);
+}
+
 // declaration = basetype ident ("[" num "]")* ("=" expr) ";"
 Node *declaration() {
   Token *tok = token;
   Type *ty = basetype();
   char *name = expect_ident();
   ty = read_type_suffix(ty);
-  Var *var = push_var(name, ty);
+  Var *var = push_var(name, ty, true);
   if (consume(";"))
     return new_node(ND_NULL);
   expect("=");
@@ -301,7 +341,7 @@ Node *mul() {
   }
 }
 
-// unary = ("+" | "-" | "*" | "&")? unary
+// unary = ("+" | "-" | "*" | "&")? unary //unaryは単項演算子　https://wa3.i-3-i.info/word13708.html
 //        | postfix
 Node *unary() {
   if (consume("+"))

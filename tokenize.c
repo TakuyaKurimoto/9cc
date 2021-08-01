@@ -130,6 +130,7 @@ Token *tokenize() {
   Token *cur = &head;
 
   while (*p) {
+    
     // Skip whitespace characters.
     if (isspace(*p)) {
       p++;
