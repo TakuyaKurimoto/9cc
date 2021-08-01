@@ -32,24 +32,20 @@ Node *new_var(Var *var) {
   return node;
 }
 
-Var *find_or_new_var(Token *t){//これ以降使われてないからpush_varと統合必要。https://github.com/rui314/chibicc/commit/3973698139945efa05228416a133ec27fd296639
+// Find a local variable by name.
+Var *find_var(Token *tok) {
   for (VarList *vl = locals; vl; vl = vl->next) {
-     Var *var = vl->var;
-     if (strlen(var->name) == t->len && !memcmp(t->str, var->name, t->len))
-       return var;
+    Var *var = vl->var;
+    if (strlen(var->name) == tok->len && !memcmp(tok->str, var->name, tok->len))
+      return var;
   }
-  Var *v = calloc(1, sizeof(Var));
-  v->name = strndup(t->str,t->len);
-  VarList *vl = calloc(1, sizeof(VarList));
-  vl->var = v;
-  vl->next = locals;
-  locals = vl;
-  return v;
+  return NULL;
 }
 
-Var *push_var(char *name) {
+Var *push_var(char *name, Type *ty) {
   Var *var = calloc(1, sizeof(Var));
   var->name = name;
+  var->ty = ty;
   VarList *vl = calloc(1, sizeof(VarList));
   vl->var = var;
   vl->next = locals;
@@ -81,25 +77,42 @@ Function *program() {
   }
   return head.next;
 } 
+
+Type *basetype() {
+  expect("int");
+  Type *ty = int_type();
+  while (consume("*"))
+    ty = pointer_to(ty);
+  return ty;
+}
+
+VarList *read_func_param() {
+  VarList *vl = calloc(1, sizeof(VarList));
+  Type *ty = basetype();
+  vl->var = push_var(expect_ident(), ty);
+  return vl;
+}
+
 VarList *read_func_params() {
   if (consume(")"))
     return NULL;
-  VarList *head = calloc(1, sizeof(VarList));
-  head->var = push_var(expect_ident());
+  VarList *head = read_func_param();
   VarList *cur = head;
   while (!consume(")")) {
     expect(",");
-    cur->next = calloc(1, sizeof(VarList));
-    cur->next->var = push_var(expect_ident());
+    cur->next = read_func_param();
     cur = cur->next;
   }
   return head;
 }
-// function = ident "(" params? ")" "{" stmt* "}"
-// params   = ident ("," ident)*
+
+// function = basetype ident "(" params? ")" "{" stmt* "}"
+// params   = param ("," param)*
+// param    = basetype ident
 Function *function() {
   locals = NULL;//ローカルズを毎回リセットする。
   Function *fn = calloc(1, sizeof(Function));
+  basetype();//関数にはまだ型名を定義しない
   fn->name = expect_ident();
   expect("(");
   fn->params = read_func_params();//引数をローカル変数と見なす。
@@ -117,11 +130,27 @@ Function *function() {
   return fn;
 }
 
+// declaration = basetype ident ("=" expr) ";"
+Node *declaration() {
+  Token *tok = token;
+  Type *ty = basetype();
+  Var *var = push_var(expect_ident(), ty);
+  if (consume(";"))
+    return new_node(ND_NULL);
+  expect("=");
+  Node *lhs = new_var(var);
+  Node *rhs = expr();
+  expect(";");
+  return new_binary(ND_ASSIGN, lhs, rhs);
+  
+}
+
 // stmt = "return" expr ";"
 //      | "if" "(" expr ")" stmt ("else" stmt)?
 //      | "while" "(" expr ")" stmt
 // 　　　| "for" "(" expr? ";" expr? ";" expr? ")" stmt
 //      | "{" stmt* "}"
+// 　　　| declaration
 //      | expr ";"
 Node *stmt() {
   if (consume("return")) {
@@ -179,6 +208,8 @@ Node *stmt() {
     node->body = head.next;
     return node;
   }
+  if (peek("int"))
+    return declaration();
   Node *node = expr();
   expect(";");
   return node;
@@ -300,7 +331,9 @@ Node *primary() {
         node->args = func_args();
         return node;
       }
-      Var *var = find_or_new_var(t);
+      Var *var = find_var(t);
+      if (!var)
+        error_at(t->str, "undefined variable");
       return new_var(var);
     }
   return new_num(expect_number());

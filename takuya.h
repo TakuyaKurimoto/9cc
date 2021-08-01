@@ -28,11 +28,13 @@ struct Token {
 typedef struct Var Var;
 struct Var {
   Var *next;
+  Type *ty; // Type
   char *name; // Variable name
   int offset; // Offset from RBP
 };
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
+Token *peek(char *s);
 char *strndup(char *p, int len);
 bool consume(char *op);
 void expect(char *op);
@@ -61,6 +63,7 @@ typedef enum {
   ND_DEREF,     // unary *
   ND_NUM, // Integer
   ND_VAR, // variable
+  ND_NULL, // Empty statement
   ND_RETURN, // "return"
   ND_IF, // "if"
   ND_WHILE, // "while"
@@ -115,6 +118,10 @@ struct Type {
   TypeKind kind;
   Type *base;
 };
+
+Type *int_type();
+Type *pointer_to(Type *base);
+
 void add_type(Function *prog);
 
 //

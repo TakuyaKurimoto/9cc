@@ -37,10 +37,15 @@ void visit(Node *node) {
   case ND_NE:
   case ND_LT:
   case ND_LE:
-  case ND_VAR:
+  
   case ND_FUNCALL:
+
   case ND_NUM:
     node->ty = int_type();
+    return;
+  
+  case ND_VAR:
+    node->ty = node->var->ty;
     return;
   case ND_ADD:
      if (node->rhs->ty->kind == TY_PTR) {//左にポインタ型が来るように調整
@@ -64,10 +69,9 @@ void visit(Node *node) {
     node->ty = pointer_to(node->lhs->ty);
     return;
   case ND_DEREF:
-    if (node->lhs->ty->kind == TY_PTR)//x=3; y=&x;*yとかだと*yという値は3を表すからint型。＊＊yみたいなやつは＊yというポインタ型を表すからポインタ型
-      node->ty = node->lhs->ty->base;
-    else
-      node->ty = int_type();
+    if (node->lhs->ty->kind != TY_PTR)//x=3; y=&x;*yとかだと*yという値は3を表すからint型。＊＊yみたいなやつは＊yというポインタ型を表すからポインタ型
+      error_at("", "invalid pointer dereference");
+    node->ty = node->lhs->ty->base;
     return;
   }
 }

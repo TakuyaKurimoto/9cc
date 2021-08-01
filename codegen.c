@@ -35,6 +35,8 @@ void store() {
 
 void gen(Node *node) {
   switch (node->kind) {
+    case ND_NULL:
+     return;
     case ND_NUM:
       printf("  push %d\n", node->val);
       return;
@@ -209,7 +211,7 @@ void codegen(Function *prog) {
     funcname = fn->name;
 
     // プロローグ
-    // ローカル変数2分の領域を確保する
+    // ローカル変数分の領域を確保する
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
     printf(" sub rsp, %d\n", fn->stack_size);
@@ -217,6 +219,7 @@ void codegen(Function *prog) {
     int i = 0;
     for (VarList *vl = fn->params; vl; vl = vl->next) {
       Var *var = vl->var;
+
       printf("  mov [rbp-%d], %s\n", var->offset, argreg[i++]);
     }
     for (Node *n=fn->node;n;n=n->next){
