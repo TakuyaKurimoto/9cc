@@ -64,6 +64,7 @@ Node *relational();
 Node *add();
 Node *mul();
 Node *unary();
+Node *postfix();
 Node *primary();
 
 // program = function*
@@ -301,7 +302,7 @@ Node *mul() {
 }
 
 // unary = ("+" | "-" | "*" | "&")? unary
-//       | primary
+//        | postfix
 Node *unary() {
   if (consume("+"))
     return unary();
@@ -311,7 +312,20 @@ Node *unary() {
     return new_unary(ND_ADDR, unary());
   if (consume("*"))
     return new_unary(ND_DEREF, unary());
-  return primary();
+  return postfix();
+}
+
+// postfix = primary ("[" expr "]")*
+Node *postfix() {
+  Node *node = primary();
+  Token *tok;
+  while (consume("[")) {
+    // x[y] is short for *(x+y)
+    Node *exp = new_binary(ND_ADD, node, expr());
+    expect("]");
+    node = new_unary(ND_DEREF, exp);
+  }
+  return node;
 }
 
 // func-args = "(" (assign ("," assign)*)? ")"
